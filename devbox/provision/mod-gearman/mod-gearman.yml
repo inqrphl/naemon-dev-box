@@ -10,6 +10,7 @@
         - libevent-devel
         - ncurses-devel
         - autoconf
+        - autoconf-archive
         - automake
         - openssl-devel
       state: installed
