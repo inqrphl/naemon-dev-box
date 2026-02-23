@@ -1,0 +1,47 @@
+# Install vscode server and some extensions
+---
+- hosts: all
+  vars:
+    extensions:
+      - golang.go
+      - bscan.perlnavigator
+      - llvm-vs-code-extensions.vscode-clangd
+      - ms-python.debugpy
+      - ms-python.python
+      - ms-python.vscode-pylance
+      - ms-python.vscode-python-envs
+      - ms-vscode.cmake-tools
+      - ms-vscode.cpptools
+      - ms-vscode.cpptools-extension-pack
+      - ms-vscode.makefile-tools
+      - redhat.ansible
+      - redhat.vscode-yaml
+      - eamodio.gitlens
+
+  tasks:
+    - name: Get latest stable version commit
+      shell:
+        cmd: curl -s https://update.code.visualstudio.com/api/update/linux-x64/stable/latest | jq -r .version
+        executable: /bin/bash
+      register: vscode_commit_id
+
+    - name: Create vscode-server bin directory
+      file:
+        path: "/root/.vscode-server/bin/{{ vscode_commit_id.stdout }}"
+        state: directory
+        mode: "0755"
+        recurse: yes
+
+    - name: Download and unpack VS Code Server
+      shell: |
+        curl -L https://update.code.visualstudio.com/commit:{{ vscode_commit_id.stdout }}/server-linux-x64/stable -o /tmp/vscode-server.tar.gz
+        tar -xzf /tmp/vscode-server.tar.gz -C /root/.vscode-server/bin/{{ vscode_commit_id.stdout }} --strip-components=1
+        touch /root/.vscode-server/bin/{{ vscode_commit_id.stdout }}/0
+      args:
+        creates: "/root/.vscode-server/bin/{{ vscode_commit_id.stdout }}/0"
+
+    - name: Install VS Code Extensions
+      shell: "/root/.vscode-server/bin/{{ vscode_commit_id.stdout }}/bin/code-server --install-extension {{ item }}"
+      loop: "{{ extensions }}"
+      register: extension_result
+      changed_when: "'already installed' not in extension_result.stdout"
