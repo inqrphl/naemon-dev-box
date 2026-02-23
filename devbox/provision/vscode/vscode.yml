@@ -23,7 +23,7 @@
     - name: Get latest stable version commit # noqa: command-instead-of-module
       ansible.builtin.shell:
         cmd: |
-          set -o pipefail &&
+          set -o pipefail
           curl -s https://update.code.visualstudio.com/api/update/linux-x64/stable/latest | jq -r .version
         executable: /bin/bash
       register: vscode_commit_id
