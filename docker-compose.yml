@@ -9,6 +9,9 @@ networks:
 services:
   devbox:
     build: devbox
+    ports:
+      - "1980:80"
+      - "19443:443"
     volumes:
       - ./:/box:ro
       - ./src:/src:rw
