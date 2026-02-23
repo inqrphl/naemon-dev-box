@@ -1,6 +1,7 @@
 # Install vscode server and some extensions
 ---
-- hosts: all
+- name: Set up VS Code server
+  hosts: all
   vars:
     extensions:
       - golang.go
@@ -19,21 +20,24 @@
       - eamodio.gitlens
 
   tasks:
-    - name: Get latest stable version commit
-      shell:
-        cmd: curl -s https://update.code.visualstudio.com/api/update/linux-x64/stable/latest | jq -r .version
+    - name: Get latest stable version commit # noqa: command-instead-of-module
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail &&
+          curl -s https://update.code.visualstudio.com/api/update/linux-x64/stable/latest | jq -r .version
         executable: /bin/bash
       register: vscode_commit_id
+      changed_when: false
 
     - name: Create vscode-server bin directory
-      file:
+      ansible.builtin.file:
         path: "/root/.vscode-server/bin/{{ vscode_commit_id.stdout }}"
         state: directory
         mode: "0755"
-        recurse: yes
+        recurse: true
 
-    - name: Download and unpack VS Code Server
-      shell: |
+    - name: Download and unpack VS Code Server # noqa: command-instead-of-module
+      ansible.builtin.shell: |
         curl -L https://update.code.visualstudio.com/commit:{{ vscode_commit_id.stdout }}/server-linux-x64/stable -o /tmp/vscode-server.tar.gz
         tar -xzf /tmp/vscode-server.tar.gz -C /root/.vscode-server/bin/{{ vscode_commit_id.stdout }} --strip-components=1
         touch /root/.vscode-server/bin/{{ vscode_commit_id.stdout }}/0
@@ -41,7 +45,7 @@
         creates: "/root/.vscode-server/bin/{{ vscode_commit_id.stdout }}/0"
 
     - name: Install VS Code Extensions
-      shell: "/root/.vscode-server/bin/{{ vscode_commit_id.stdout }}/bin/code-server --install-extension {{ item }}"
+      ansible.builtin.command: "/root/.vscode-server/bin/{{ vscode_commit_id.stdout }}/bin/code-server --install-extension {{ item }}"
       loop: "{{ extensions }}"
       register: extension_result
       changed_when: "'already installed' not in extension_result.stdout"

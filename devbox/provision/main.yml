@@ -28,6 +28,11 @@
       ansible.builtin.shell: "git config --global --add safe.directory '*'"
       changed_when: false
 
+    - name: Import vscode playbook
+      ansible.builtin.import_playbook: vscode/vscode.yml
+
+# Now import source playbooks
+
 - name: Import omd playbook
   import_playbook: omd/omd.yml
 
