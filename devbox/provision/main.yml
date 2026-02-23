@@ -1,43 +1,92 @@
+# Playbook for provisioning the docker host
 ---
-- hosts: all
+- name: Initial setup of the host
+  hosts: all
   tasks:
-  - name: Install development tools
+    - name: Install development tools
       ansible.builtin.dnf:
-     name:
-        - glibc-langpack-en.x86_64
-        - lsof
-        - telnet
-        - git
-        - vim
-        - gdb
-        - valgrind
-        - wget
-        - bash-completion
-     state: installed
-  - shell: echo -e "*********\nYou can always reprovision by running\n%>bash /box/devbox/provision/ansible.sh\n*********\n" > /etc/motd
-  - shell: echo "alias la='ls -la'" > /etc/profile.d/dev.sh
-  - shell: "git config --global --add safe.directory '*'"
-- import_playbook: omd/omd.yml
-- import_playbook: apache/apache.yml
-- import_playbook: naemon/naemon.yml
-- import_playbook: golang/golang.yml
-- import_playbook: process-exporter/process-exporter.yml
-- import_playbook: node-exporter/node-exporter.yml
-#- import_playbook: prometheus-nagios-exporter/prometheus-nagios-exporter.yml
-- import_playbook: thruk/thruk.yml
-#- import_playbook: gearmand/gearmand.yml
-- import_playbook: mod-gearman/mod-gearman.yml
-- import_playbook: mod-gearman-worker-go/mod-gearman-worker-go.yml
-#- import_playbook: nagflux/nagflux.yml
-#- import_playbook: histou/histou.yml
-# this should be the last regular playbook
-- import_playbook: git/git.yml
+        name:
+          - glibc-langpack-en.x86_64
+          - lsof
+          - telnet
+          - git
+          - vim
+          - gdb
+          - valgrind
+          - wget
+          - bash-completion
+        state: installed
+    - name: Print provision message
+      ansible.builtin.shell: echo -e "*********\nYou can always reprovision by running\n%>bash /box/devbox/provision/ansible.sh\n*********\n" > /etc/motd
+      changed_when: false
 
-- hosts: all
+    - name: Add ls alias
+      ansible.builtin.shell: echo "alias la='ls -la'" > /etc/profile.d/dev.sh
+      changed_when: false
+
+    - name: Add git safe directory # noqa: command-instead-of-module
+      ansible.builtin.shell: "git config --global --add safe.directory '*'"
+      changed_when: false
+
+- name: Import omd playbook
+  import_playbook: omd/omd.yml
+
+- name: Import apache playbook
+  import_playbook: apache/apache.yml
+
+- name: Import naemon playbook
+  import_playbook: naemon/naemon.yml
+
+- name: Import golang playbook
+  import_playbook: golang/golang.yml
+
+- name: Import Process Exporter Playbook
+  import_playbook: process-exporter/process-exporter.yml
+
+- name: Import Node Exporter Playbook
+  import_playbook: node-exporter/node-exporter.yml
+
+- name: Import Prometheus-Nagios-Exporter Playbook
+  import_playbook: prometheus-nagios-exporter/prometheus-nagios-exporter.yml
+  when: false
+
+- name: Import thruk playbook
+  import_playbook: thruk/thruk.yml
+
+- name: Import gearmand playbook
+  import_playbook: gearmand/gearmand.yml
+
+- name: Import Mod-Gearman playbook
+  import_playbook: mod-gearman/mod-gearman.yml
+
+- name: Import mod-gearman-worker playbook
+  import_playbook: mod-gearman-worker-go/mod-gearman-worker-go.yml
+  when: false
+
+- name: Import nagflux playbook
+  import_playbook: nagflux/nagflux.yml
+  when: false
+
+- name: Import histou playbook
+  import_playbook: histou/histou.yml
+  when: false
+
+# this should be the last regular playbook
+- name: Import git playbook
+  import_playbook: git/git.yml
+
+- name: Update and restart OMD
+  hosts: all
   tasks:
-#  - name: "update repositories"
-#    shell: "make update build"
-#    args:
-#      chdir: /src/
-  - name: "omd restart mon"
-    shell: "omd restart mon"
+    - name: Update repositories
+      ansible.builtin.command: "make update build"
+      args:
+        chdir: /src/
+      when: false
+      register: make_update_build
+      changed_when: make_update_build.rc == 0
+
+    - name: Omd restart mon site
+      ansible.builtin.command: "omd restart mon"
+      register: omd_restart_mon
+      changed_when: omd_restart_mon.rc == 0
