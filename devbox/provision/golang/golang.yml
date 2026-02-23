@@ -1,7 +1,7 @@
 ---
 - hosts: all
   vars:
-    golang: 1.25.5
+    golang: 1.25.7
     srcurl: https://go.dev/dl/
   tasks:
   - name: "fetch golang x86 tarball"
@@ -25,3 +25,10 @@
         regexp: 'export PATH='
         create: yes
         state: present
+  - name: Install dlv debugger
+    shell:
+      cmd: /usr/local/go-{{ golang }}/bin/go install github.com/go-delve/delve/cmd/dlv@latest
+
+  - name: Install go language server
+    shell:
+      cmd: /usr/local/go-{{ golang }}/bin/go install golang.org/x/tools/gopls@latest
