@@ -1,7 +1,8 @@
 ---
 - hosts: all
   tasks:
-  - yum:
+  - name: Install development tools
+      ansible.builtin.dnf:
      name:
         - glibc-langpack-en.x86_64
         - lsof
