@@ -3,6 +3,15 @@
 - name: Initial setup of the host
   hosts: all
   tasks:
+    - name: Enable devel repository
+      ansible.builtin.command: sudo dnf config-manager --set-enabled devel
+      changed_when: false
+
+    - name: Install the 'Development tools' package group
+      ansible.builtin.dnf:
+        name: "@Development tools"
+        state: present
+
     - name: Install development tools
       ansible.builtin.dnf:
         name:
@@ -15,6 +24,9 @@
           - valgrind
           - wget
           - bash-completion
+          - jq
+          - htop
+          - clangd
         state: installed
     - name: Print provision message
       ansible.builtin.shell: echo -e "*********\nYou can always reprovision by running\n%>bash /box/devbox/provision/ansible.sh\n*********\n" > /etc/motd
@@ -28,56 +40,50 @@
       ansible.builtin.shell: "git config --global --add safe.directory '*'"
       changed_when: false
 
-    - name: Import vscode playbook
-      ansible.builtin.import_playbook: vscode/vscode.yml
-
 # Now import source playbooks
-
-- name: Import omd playbook
+- name: Import OMD playbook
   import_playbook: omd/omd.yml
 
-- name: Import apache playbook
+- name: Import Apache playbook
   import_playbook: apache/apache.yml
 
-- name: Import naemon playbook
+- name: Import Naemon playbook
   import_playbook: naemon/naemon.yml
 
-- name: Import golang playbook
+- name: Import Golang playbook
   import_playbook: golang/golang.yml
 
-- name: Import Process Exporter Playbook
+- name: Import Process Exporter playbook
   import_playbook: process-exporter/process-exporter.yml
 
-- name: Import Node Exporter Playbook
+- name: Import Node Exporter playbook
   import_playbook: node-exporter/node-exporter.yml
 
-- name: Import Prometheus-Nagios-Exporter Playbook
-  import_playbook: prometheus-nagios-exporter/prometheus-nagios-exporter.yml
-  when: false
+# - name: Import Prometheus-Nagios-Exporter Playbook
+#   import_playbook: prometheus-nagios-exporter/prometheus-nagios-exporter.yml
 
-- name: Import thruk playbook
+- name: Import Thruk playbook
   import_playbook: thruk/thruk.yml
 
-- name: Import gearmand playbook
-  import_playbook: gearmand/gearmand.yml
+# - name: Import Gearmand playbook
+#   import_playbook: gearmand/gearmand.yml
 
 - name: Import Mod-Gearman playbook
   import_playbook: mod-gearman/mod-gearman.yml
 
-- name: Import mod-gearman-worker playbook
-  import_playbook: mod-gearman-worker-go/mod-gearman-worker-go.yml
-  when: false
-
-- name: Import nagflux playbook
+# - name: Import mod-gearman-worker playbook
+#   import_playbook: mod-gearman-worker-go/mod-gearman-worker-go.yml
+- name: Import Nagflux playbook
   import_playbook: nagflux/nagflux.yml
-  when: false
 
-- name: Import histou playbook
-  import_playbook: histou/histou.yml
-  when: false
+# - name: Import histou playbook
+#   import_playbook: histou/histou.yml
+
+- name: Import VSCode playbook
+  ansible.builtin.import_playbook: vscode/vscode.yml
 
 # this should be the last regular playbook
-- name: Import git playbook
+- name: Import Git playbook
   import_playbook: git/git.yml
 
 - name: Update and restart OMD
